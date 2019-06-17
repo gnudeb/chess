@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, auto, IntEnum
 from functools import lru_cache
+from itertools import product
 import re
 from typing import List, NamedTuple
 import unicodedata
@@ -198,12 +199,28 @@ class Board:
         self._place_heavy_pieces()
 
     def _place_heavy_pieces(self):
-        for rank, color in [(1, PieceColor.WHITE), (8, PieceColor.BLACK)]:
-            for file, piece_kind in self._default_piece_locations.values():
-                self.put_piece(Piece(piece_kind, color), Position(file, rank))
+        for color, file in product(PieceColor, File):
+            rank = self._heavy_piece_rank_for_color(color)
+            piece_kind = self._piece_kind_for_file(file)
+            self.put_piece(Piece(piece_kind, color), Position(file, rank))
 
     def _place_pawns(self):
-        # TODO: Retrieve starting pawn positions from precomputed list
-        for rank, color in [(2, PieceColor.WHITE), (7, PieceColor.BLACK)]:
-            for file in File:
-                self.put_piece(Piece(PieceKind.PAWN, color), Position(file, rank))
+        for color in PieceColor:
+            for position in self._starting_pawn_positions(color):
+                self.put_piece(Piece(PieceKind.PAWN, color), position)
+
+    def _starting_pawn_positions(self, color: PieceColor) -> List[Position]:
+        rank = self._pawn_rank_for_color(color)
+        return [Position(file, rank) for file in File]
+
+    @staticmethod
+    def _pawn_rank_for_color(color: PieceColor) -> Rank:
+        return {PieceColor.WHITE: 2, PieceColor.BLACK: 7}[color]
+
+    @staticmethod
+    def _heavy_piece_rank_for_color(color: PieceColor) -> Rank:
+        return {PieceColor.WHITE: 1, PieceColor.BLACK: 8}[color]
+
+    @classmethod
+    def _piece_kind_for_file(cls, file: File) -> PieceKind:
+        return cls._default_piece_locations[file]
