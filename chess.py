@@ -79,7 +79,7 @@ class PieceKind(Enum):
 
 class Piece(NamedTuple):
     kind: PieceKind
-    color: PieceColor = None
+    color: PieceColor
 
     def __str__(self):
         return f"{self.color.name}, {self.kind.name}"
@@ -89,8 +89,6 @@ class Piece(NamedTuple):
 
     @lru_cache(maxsize=16)
     def to_unicode(self):
-        if self.kind == PieceKind.EMPTY:
-            return " "
         character_name = f"{self.color.name} CHESS {self.kind.name}"
         return unicodedata.lookup(character_name)
 
