@@ -39,20 +39,20 @@ class File(IntEnum):
 Rank = int
 
 
-class Location(NamedTuple):
+class Position(NamedTuple):
     file: File
     rank: Rank
 
     def __repr__(self):
-        return f"Location({self.file.name}, {self.rank})"
+        return f"Position({self.file.name}, {self.rank})"
 
     def as_index(self) -> int:
         return (self.rank - 1) * 8 + self.file.value
 
     @classmethod
-    def from_algebraic_notation(cls, location: str) -> 'Location':
+    def from_algebraic_notation(cls, location: str) -> 'Position':
         raw_file, raw_rank = location
-        return Location(
+        return Position(
             file=File.from_algebraic_notation(raw_file),
             rank=Rank(raw_rank),
         )
@@ -110,8 +110,8 @@ class Move:
 @dataclass
 class RegularMove(Move):
     piece_kind: PieceKind = None
-    departure: Location = None
-    destination: Location = None
+    departure: Position = None
+    destination: Position = None
     with_capture: bool = False
 
     _regex = re.compile(
@@ -133,10 +133,10 @@ class RegularMove(Move):
         move_dict = match.groupdict()
         piece_kind = PieceKind.from_letter(move_dict["piece_kind"])
         if move_dict['departure']:
-            departure = Location.from_algebraic_notation(move_dict['departure'])
+            departure = Position.from_algebraic_notation(move_dict['departure'])
         else:
             departure = None
-        destination = Location.from_algebraic_notation(move_dict['destination'])
+        destination = Position.from_algebraic_notation(move_dict['destination'])
         with_capture = bool(move_dict['capture'])
 
         return RegularMove(piece_kind, departure, destination, with_capture)
@@ -187,10 +187,10 @@ class Board:
     def __iter__(self):
         return iter(self._pieces)
 
-    def piece_at(self, location: Location):
+    def piece_at(self, location: Position):
         return self._pieces[location.as_index()]
 
-    def put_piece(self, piece: Piece, location: Location):
+    def put_piece(self, piece: Piece, location: Position):
         self._pieces[location.as_index()] = piece
 
     def _set_up_new_game(self):
@@ -200,9 +200,10 @@ class Board:
     def _place_heavy_pieces(self):
         for rank, color in [(1, PieceColor.WHITE), (8, PieceColor.BLACK)]:
             for file, piece_kind in self._default_piece_locations.values():
-                self.put_piece(Piece(piece_kind, color), Location(file, rank))
+                self.put_piece(Piece(piece_kind, color), Position(file, rank))
 
     def _place_pawns(self):
+        # TODO: Retrieve starting pawn positions from precomputed list
         for rank, color in [(2, PieceColor.WHITE), (7, PieceColor.BLACK)]:
             for file in File:
-                self.put_piece(Piece(PieceKind.PAWN, color), Location(file, rank))
+                self.put_piece(Piece(PieceKind.PAWN, color), Position(file, rank))
