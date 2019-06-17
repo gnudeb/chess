@@ -46,6 +46,9 @@ class Location(NamedTuple):
     def __repr__(self):
         return f"Location({self.file.name}, {self.rank})"
 
+    def as_index(self) -> int:
+        return (self.rank - 1) * 8 + self.file.value
+
     @classmethod
     def from_algebraic_notation(cls, location: str) -> 'Location':
         raw_file, raw_rank = location
@@ -166,33 +169,34 @@ class CastlingMove(Move):
 
 class Board:
 
+    _default_piece_locations = {
+        File.A: PieceKind.ROOK,
+        File.B: PieceKind.KNIGHT,
+        File.C: PieceKind.BISHOP,
+        File.D: PieceKind.QUEEN,
+        File.E: PieceKind.KING,
+        File.F: PieceKind.BISHOP,
+        File.G: PieceKind.KNIGHT,
+        File.H: PieceKind.ROOK,
+    }
+
     def __init__(self):
         self._pieces: List[Piece] = [None] * 64
 
     def __iter__(self):
         return iter(self._pieces)
 
-    def piece_at(self, file, rank):
-        return self._pieces[self._filerank_to_index(file, rank)]
+    def piece_at(self, location: Location):
+        return self._pieces[location.as_index()]
 
-    def put_piece(self, piece: Piece, file: File, rank: int):
-        self._pieces[self._filerank_to_index(file, rank)] = piece
+    def put_piece(self, piece: Piece, location: Location):
+        self._pieces[location.as_index()] = piece
 
     def populate(self):
         for rank, color in [(2, PieceColor.WHITE), (7, PieceColor.BLACK)]:
             for file in File:
-                self.put_piece(Piece(PieceKind.PAWN, color), file, rank)
+                self.put_piece(Piece(PieceKind.PAWN, color), Location(file, rank))
 
         for rank, color in [(1, PieceColor.WHITE), (8, PieceColor.BLACK)]:
-            self.put_piece(Piece(PieceKind.ROOK, color), File.A, rank)
-            self.put_piece(Piece(PieceKind.KNIGHT, color), File.B, rank)
-            self.put_piece(Piece(PieceKind.BISHOP, color), File.C, rank)
-            self.put_piece(Piece(PieceKind.QUEEN, color), File.D, rank)
-            self.put_piece(Piece(PieceKind.KING, color), File.E, rank)
-            self.put_piece(Piece(PieceKind.KNIGHT, color), File.F, rank)
-            self.put_piece(Piece(PieceKind.BISHOP, color), File.G, rank)
-            self.put_piece(Piece(PieceKind.ROOK, color), File.H, rank)
-
-    @staticmethod
-    def _filerank_to_index(file, rank):
-        return (rank - 1) * 8 + file
+            for file, piece_kind in self._default_piece_locations.values():
+                self.put_piece(Piece(piece_kind, color), Location(file, rank))
