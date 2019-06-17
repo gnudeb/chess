@@ -182,6 +182,7 @@ class Board:
 
     def __init__(self):
         self._pieces: List[Piece] = [None] * 64
+        self._set_up_new_game()
 
     def __iter__(self):
         return iter(self._pieces)
@@ -192,11 +193,16 @@ class Board:
     def put_piece(self, piece: Piece, location: Location):
         self._pieces[location.as_index()] = piece
 
-    def populate(self):
-        for rank, color in [(2, PieceColor.WHITE), (7, PieceColor.BLACK)]:
-            for file in File:
-                self.put_piece(Piece(PieceKind.PAWN, color), Location(file, rank))
+    def _set_up_new_game(self):
+        self._place_pawns()
+        self._place_heavy_pieces()
 
+    def _place_heavy_pieces(self):
         for rank, color in [(1, PieceColor.WHITE), (8, PieceColor.BLACK)]:
             for file, piece_kind in self._default_piece_locations.values():
                 self.put_piece(Piece(piece_kind, color), Location(file, rank))
+
+    def _place_pawns(self):
+        for rank, color in [(2, PieceColor.WHITE), (7, PieceColor.BLACK)]:
+            for file in File:
+                self.put_piece(Piece(PieceKind.PAWN, color), Location(file, rank))
