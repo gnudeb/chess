@@ -3,7 +3,7 @@ from enum import Enum, auto, IntEnum
 from functools import lru_cache
 from itertools import product
 import re
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Optional
 import unicodedata
 
 
@@ -108,9 +108,9 @@ class Move:
 
 @dataclass
 class RegularMove(Move):
-    piece_kind: PieceKind = None
-    departure: Position = None
-    destination: Position = None
+    destination: Position
+    departure: Optional[Position] = None
+    piece_kind: Optional[PieceKind] = None
     with_capture: bool = False
 
     _regex = re.compile(
@@ -131,14 +131,13 @@ class RegularMove(Move):
 
         move_dict = match.groupdict()
         piece_kind = PieceKind.from_letter(move_dict["piece_kind"])
+        departure: Optional[Position] = None
         if move_dict['departure']:
             departure = Position.from_algebraic_notation(move_dict['departure'])
-        else:
-            departure = None
         destination = Position.from_algebraic_notation(move_dict['destination'])
         with_capture = bool(move_dict['capture'])
 
-        return RegularMove(piece_kind, departure, destination, with_capture)
+        return RegularMove(destination, departure, piece_kind, with_capture)
 
 
 @dataclass
