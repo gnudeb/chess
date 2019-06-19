@@ -188,7 +188,7 @@ class Board:
     def piece_at(self, location: Position):
         return self._pieces[location.as_index()]
 
-    def put_piece(self, piece: Piece, location: Position):
+    def place_piece(self, piece: Piece, location: Position):
         self._pieces[location.as_index()] = piece
 
     def _set_up_new_game(self):
@@ -199,12 +199,12 @@ class Board:
         for color, file in product(PieceColor, File):
             rank = self._heavy_piece_rank_for_color(color)
             piece_kind = self._piece_kind_for_file(file)
-            self.put_piece(Piece(piece_kind, color), Position(file, rank))
+            self.place_piece(Piece(piece_kind, color), Position(file, rank))
 
     def _place_pawns(self):
         for color in PieceColor:
             for position in self._starting_pawn_positions(color):
-                self.put_piece(Piece(PieceKind.PAWN, color), position)
+                self.place_piece(Piece(PieceKind.PAWN, color), position)
 
     def _starting_pawn_positions(self, color: PieceColor) -> List[Position]:
         rank = self._pawn_rank_for_color(color)
