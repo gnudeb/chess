@@ -1,10 +1,48 @@
 from dataclasses import dataclass
 from enum import Enum, auto, IntEnum
-from functools import lru_cache
+from functools import lru_cache, wraps
 from itertools import product
 import re
 from typing import List, NamedTuple, Optional
 import unicodedata
+
+
+def collect(collector):
+    """
+    Wraps a generator inside a collector function.
+
+    Used to get rid of boilerplate method pairs like these:
+
+    >>> def number_cube(n) -> str:
+    ...     return ''.join(_number_cube(n))
+    ...
+    ... def _number_cube(n) -> Generator[str]:
+    ...     for i in range(n**2):
+    ...         yield str(i)
+    ...         if (i + 1) % n == 0:
+    ...             yield ''\n''
+
+    Instead, use this decorator:
+
+    >>> concatenate = collect(lambda g: ''.join(g))
+    ...
+    ... @concatenate
+    ... def number_cube(n) -> str:
+    ...     for i in range(n**2):
+    ...         yield str(i)
+    ...         if (i + 1) % n == 0:
+    ...             yield ''\n''
+    """
+    def decorator(generator):
+        @wraps(generator)
+        def wrapper(*args, **kwargs):
+            return collector(generator(*args, **kwargs))
+        return wrapper
+
+    return decorator
+
+
+concatenate = collect(lambda g: ''.join(g))
 
 
 class PieceColor(Enum):
@@ -37,7 +75,27 @@ class File(IntEnum):
         raise InvalidNotationError(f"No such file: {file_letter}")
 
 
-Rank = int
+class Rank(NamedTuple):
+    value: int
+
+    @classmethod
+    def from_algebraic_notation(cls, rank: str) -> 'Rank':
+        if not rank.isdigit():
+            raise InvalidNotationError(f"Expected digit for rank, got {rank}")
+        if not cls.is_valid_value(int(rank)):
+            raise InvalidNotationError(
+                f"{rank} must be in range 1 to 8 inclusive"
+            )
+
+        return Rank(int(rank))
+
+    @classmethod
+    def is_valid_value(cls, rank: int) -> bool:
+        return 1 <= rank <= 8
+
+    @classmethod
+    def every(cls):
+        return list(map(Rank, range(1, 9)))
 
 
 class Position(NamedTuple):
@@ -48,15 +106,20 @@ class Position(NamedTuple):
         return f"Position({self.file.name}, {self.rank})"
 
     def as_index(self) -> int:
-        return (self.rank - 1) * 8 + self.file.value
+        return (self.rank.value - 1) * 8 + self.file.value
 
     @classmethod
     def from_algebraic_notation(cls, location: str) -> 'Position':
         raw_file, raw_rank = location
         return Position(
             file=File.from_algebraic_notation(raw_file),
-            rank=Rank(raw_rank),
+            rank=Rank.from_algebraic_notation(raw_rank),
         )
+
+    @classmethod
+    def every(cls):
+        for rank, file in product(reversed(Rank.every()), File):
+            yield Position(file, rank)
 
 
 class PieceKind(Enum):
@@ -210,13 +273,24 @@ class Board:
         rank = self._pawn_rank_for_color(color)
         return [Position(file, rank) for file in File]
 
+    @concatenate
+    def to_unicode(self):
+        for position in Position.every():
+            piece = self.piece_at(position)
+            if piece is not None:
+                yield piece.to_unicode()
+            else:
+                yield " "
+            if position.file == File.H and position.rank.value is not 1:
+                yield "\n"
+
     @staticmethod
     def _pawn_rank_for_color(color: PieceColor) -> Rank:
-        return {PieceColor.WHITE: 2, PieceColor.BLACK: 7}[color]
+        return Rank({PieceColor.WHITE: 2, PieceColor.BLACK: 7}[color])
 
     @staticmethod
     def _heavy_piece_rank_for_color(color: PieceColor) -> Rank:
-        return {PieceColor.WHITE: 1, PieceColor.BLACK: 8}[color]
+        return Rank({PieceColor.WHITE: 1, PieceColor.BLACK: 8}[color])
 
     @classmethod
     def _piece_kind_for_file(cls, file: File) -> PieceKind:
