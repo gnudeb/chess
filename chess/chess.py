@@ -15,8 +15,11 @@ class PieceColor(Enum):
     BLACK = auto()
     WHITE = auto()
 
+    def __str__(self):
+        return self.name.capitalize()
 
-class File(IntEnum):
+
+class File(Enum):
     A = 0
     B = 1
     C = 2
@@ -26,8 +29,8 @@ class File(IntEnum):
     G = 6
     H = 7
 
-    def __repr__(self):
-        return f"File.{self.name}"
+    def __str__(self):
+        return self.name.lower()
 
     @classmethod
     def from_algebraic_notation(cls, file_letter: str) -> 'File':
@@ -39,6 +42,9 @@ class File(IntEnum):
 
 class Rank(NamedTuple):
     value: int
+
+    def __str__(self):
+        return str(self.value)
 
     @classmethod
     def from_algebraic_notation(cls, rank: str) -> 'Rank':
@@ -64,8 +70,8 @@ class Position(NamedTuple):
     file: File
     rank: Rank
 
-    def __repr__(self):
-        return f"Position({self.file.name}, {self.rank})"
+    def __str__(self):
+        return f"{self.file}{self.rank}"
 
     def as_index(self) -> int:
         return (self.rank.value - 1) * 8 + self.file.value
@@ -92,8 +98,8 @@ class PieceKind(Enum):
     ROOK = "R"
     BISHOP = "B"
 
-    def __repr__(self):
-        return f"PieceKind({self.name})"
+    def __str__(self):
+        return self.name.capitalize()
 
     @classmethod
     def from_letter(cls, letter: str) -> 'PieceKind':
@@ -107,10 +113,7 @@ class Piece(NamedTuple):
     color: PieceColor
 
     def __str__(self):
-        return f"{self.color.name}, {self.kind.name}"
-
-    def __repr__(self):
-        return f"Piece({str(self)})"
+        return f"{self.color} {self.kind}"
 
     @lru_cache(maxsize=16)
     def to_unicode(self):
