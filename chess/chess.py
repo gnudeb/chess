@@ -1,57 +1,19 @@
 from dataclasses import dataclass
 from enum import Enum, auto, IntEnum
-from functools import lru_cache, wraps
+from functools import lru_cache
 from itertools import product
 import re
 from typing import List, NamedTuple, Optional, Dict
 import unicodedata
 
 
-def collect(collector):
-    """
-    Wraps a generator inside a collector function.
-
-    Used to get rid of boilerplate method pairs like these:
-
-    >>> def number_cube(n) -> str:
-    ...     return ''.join(_number_cube(n))
-    ...
-    ... def _number_cube(n) -> Generator[str]:
-    ...     for i in range(n**2):
-    ...         yield str(i)
-    ...         if (i + 1) % n == 0:
-    ...             yield ''\n''
-
-    Instead, use this decorator:
-
-    >>> concatenate = collect(lambda g: ''.join(g))
-    ...
-    ... @concatenate
-    ... def number_cube(n) -> str:
-    ...     for i in range(n**2):
-    ...         yield str(i)
-    ...         if (i + 1) % n == 0:
-    ...             yield ''\n''
-    """
-    def decorator(generator):
-        @wraps(generator)
-        def wrapper(*args, **kwargs):
-            return collector(generator(*args, **kwargs))
-        return wrapper
-
-    return decorator
-
-
-concatenate = collect(lambda g: ''.join(g))
+from .exceptions import InvalidNotationError
+from .util import concatenate
 
 
 class PieceColor(Enum):
     BLACK = auto()
     WHITE = auto()
-
-
-class InvalidNotationError(Exception):
-    pass
 
 
 class File(IntEnum):
