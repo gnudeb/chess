@@ -3,7 +3,7 @@ from enum import Enum, auto, IntEnum
 from functools import lru_cache, wraps
 from itertools import product
 import re
-from typing import List, NamedTuple, Optional
+from typing import List, NamedTuple, Optional, Dict
 import unicodedata
 
 
@@ -242,17 +242,17 @@ class Board:
     }
 
     def __init__(self):
-        self._pieces: List[Piece] = [None] * 64
+        self._pieces: Dict[Position, Piece] = {}
         self._set_up_new_game()
 
     def __iter__(self):
         return iter(self._pieces)
 
-    def piece_at(self, location: Position):
-        return self._pieces[location.as_index()]
+    def piece_at(self, position: Position) -> Optional[Piece]:
+        return self._pieces.get(position, None)
 
-    def place_piece(self, piece: Piece, location: Position):
-        self._pieces[location.as_index()] = piece
+    def place_piece(self, piece: Piece, position: Position):
+        self._pieces[position] = piece
 
     def _set_up_new_game(self):
         self._place_pawns()
