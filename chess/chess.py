@@ -7,7 +7,7 @@ from typing import List, NamedTuple, Optional, Dict
 import unicodedata
 
 
-from .exceptions import InvalidNotationError
+from .exceptions import InvalidNotationError, IllegalMoveError
 from .util import concatenate
 
 
@@ -215,6 +215,18 @@ class Board:
 
     def place_piece(self, piece: Piece, position: Position):
         self._pieces[position] = piece
+
+    def move_piece(self, origin: Position, destination: Position):
+        self.place_piece(
+            piece=self._remove_piece_at(origin),
+            position=destination,
+        )
+
+    def _remove_piece_at(self, position: Position) -> Piece:
+        try:
+            return self._pieces.pop(position)
+        except KeyError:
+            raise IllegalMoveError(f"No piece present at {position}")
 
     def _set_up_new_game(self):
         self._place_pawns()
