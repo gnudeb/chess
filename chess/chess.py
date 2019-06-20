@@ -134,14 +134,14 @@ class Move:
 @dataclass
 class RegularMove(Move):
     destination: Position
-    departure: Optional[Position] = None
+    origin: Optional[Position] = None
     piece_kind: Optional[PieceKind] = None
     with_capture: bool = False
 
     _regex = re.compile(
         """
         (?P<piece_kind>[KQNBR])?
-        (?P<departure>[a-h][1-8])?
+        (?P<origin>[a-h][1-8])?
         (?P<capture>[x:])?
         (?P<destination>[a-h][1-8])
         """,
@@ -156,13 +156,13 @@ class RegularMove(Move):
 
         move_dict = match.groupdict()
         piece_kind = PieceKind.from_letter(move_dict["piece_kind"])
-        departure: Optional[Position] = None
-        if move_dict['departure']:
-            departure = Position.from_algebraic_notation(move_dict['departure'])
+        origin: Optional[Position] = None
+        if move_dict['origin']:
+            origin = Position.from_algebraic_notation(move_dict['origin'])
         destination = Position.from_algebraic_notation(move_dict['destination'])
         with_capture = bool(move_dict['capture'])
 
-        return RegularMove(destination, departure, piece_kind, with_capture)
+        return RegularMove(destination, origin, piece_kind, with_capture)
 
 
 @dataclass
