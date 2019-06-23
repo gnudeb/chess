@@ -211,7 +211,7 @@ class Board:
         self._set_up_new_game()
 
     def __iter__(self):
-        return iter(self._pieces)
+        return iter(self._pieces.values())
 
     def piece_at(self, position: Position) -> Piece:
         if self.has_piece_at(position):
@@ -230,6 +230,19 @@ class Board:
             piece=self._remove_piece_at(origin),
             position=destination,
         )
+
+    def position_of(self, piece: Piece) -> Position:
+        """Return a position corresponding to a given piece.
+
+        This method expects only those `Piece` objects that have been fetched
+        from this instance of `Board`. This means that calls like
+        `board.position_of(Piece(PieceKind.KING, PieceColor.WHITE))`
+        will always throw `KeyError`.
+        """
+        for position, piece_on_board in self._pieces.items():
+            if piece_on_board is piece:
+                return position
+        raise KeyError
 
     def _remove_piece_at(self, position: Position) -> Piece:
         try:
