@@ -1,8 +1,8 @@
 from typing import Collection, List
 import unittest
 
-from chess.chess import Board, Position, File, Rank, Piece, PieceKind, \
-    PieceColor
+from chess.chess import Board
+from chess.types import PieceColor, File, Rank, Position, PieceKind, Piece
 
 
 class TestPosition(unittest.TestCase):
