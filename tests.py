@@ -2,6 +2,7 @@ from typing import Collection, List
 import unittest
 
 from chess.chess import Board
+from chess.exceptions import IllegalMoveError
 from chess.types import PieceColor, File, Rank, Position, PieceKind, Piece
 
 
@@ -74,6 +75,12 @@ class TestBoard(unittest.TestCase):
         )
 
         self._then_all_selected_pieces_are_on_rank(7)
+
+    def test_move_from_empty_square_raises_exception(self):
+        self._given_board_with_pieces()
+
+        with self.assertRaises(IllegalMoveError):
+            self._when_piece_is_moved("e4", "e5")
 
     def _given_board_with_pieces(self):
         self.board = Board()
